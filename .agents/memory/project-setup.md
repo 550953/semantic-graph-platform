@@ -5,10 +5,13 @@ description: Core infrastructure, secrets, domain, and git rules for semantic-gr
 
 # semantic-graph-platform — Project Setup
 
-## Git (DO NOT do until user explicitly says so)
-- SSH key: `~/.ssh/deploy_semantic-graph-platform`
-- Remote: `git@github.com:550953/semantic-graph-platform.git`
-- Do NOT run `git init`, `git remote`, or any push until user gives direct instruction.
+## Git (DONE — configured)
+- SSH key: `~/.ssh/deploy_semantic-graph-platform` (ed25519, already exists in env)
+- SSH config alias: `github-semantic` → `github.com` using that key (`~/.ssh/config`)
+- Remote `origin`: `git@github-semantic:550953/semantic-graph-platform.git`
+- Auth verified: `Hi 550953/semantic-graph-platform! You've successfully authenticated.`
+- Push command: `git push origin main`
+- **Note:** `~/.ssh` is ephemeral — if env resets, re-run SSH config setup before pushing.
 
 ## Secrets (via Infisical)
 - **Infisical credentials**: INFISICAL_CLIENT_ID / INFISICAL_CLIENT_SECRET (saved as Replit secrets)
