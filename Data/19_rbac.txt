@@ -1,0 +1,1 @@
+Доступ проверяется по JWT роли admin member и workspace membership. Multi-tenant изоляция по workspace_id. Полный объектный RBAC для банка планируется на следующем этапе. Сейчас admin видит админ-панель.

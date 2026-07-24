@@ -1,0 +1,1 @@
+Админ-панель доступна только пользователю с role admin после входа по JWT. Admin видит пользователей workspaces оценки и ontology profile. Регистрация создаёт member.

@@ -1,0 +1,6 @@
+{
+  "name": "graph-platform-ai",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Graph Copilot + Context Builder — source package (runtime wired via backend/src/ai)"
+}
