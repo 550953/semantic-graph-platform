@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: semantic-graph-platform
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: .
+    buildCommand: |
+      cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: node backend/src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: API_KEY
+        generateValue: true
+      - key: INFISICAL_CLIENT_ID
+        sync: false
+      - key: INFISICAL_CLIENT_SECRET
+        sync: false
+      - key: INFISICAL_PROJECT_ID
+        value: 555e71be-4c53-4b3e-9409-0d9838aea8b6
+      - key: INFISICAL_ENVIRONMENT
+        value: dev
+    healthCheckPath: /api/health
+    autoDeploy: true

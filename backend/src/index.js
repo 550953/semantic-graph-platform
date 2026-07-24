@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import { createRequire } from 'module';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 import { 
   getDb, setDb, validateSecrets, wsId, graphId, 
   validateWorkspaceAccess, jparse, jstr 
@@ -20,16 +24,22 @@ import ragRoutes from './routes/rag.js';
 import ratingsRoutes from './routes/ratings.js';
 import graphsRoutes from './routes/graphs.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 validateSecrets();
 
-app.use(cors({ origin: true, credentials: true }));
+// В production CORS не нужен — фронт раздаётся тем же сервером
+// В dev оставляем open для Vite dev-server
+app.use(cors({ origin: process.env.NODE_ENV === 'production' ? false : true, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(securityHeaders);
 app.use(rateLimit({ windowMs: 60000, max: 180 }));
 app.use(authOptional);
+
+// ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api', graphsRoutes);
 
 const db = getDb();
@@ -183,7 +193,7 @@ app.delete('/api/role-bindings/:id', authRequired, (req, res) => {
   }
 });
 
-// Existing routes
+// Named API routes
 app.use('/api', authRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', workspacesRoutes);
@@ -191,6 +201,20 @@ app.use('/api', graphRoutes);
 app.use('/api', copilotRoutes);
 app.use('/api', ragRoutes);
 app.use('/api', ratingsRoutes);
+
+// ── Static frontend (production) ──────────────────────────────────────────────
+// backend/ живёт в корне репо в backend/, фронт собирается в frontend/dist/
+const frontendDist = join(__dirname, '..', '..', 'frontend', 'dist');
+if (existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  // SPA fallback — все не-API маршруты → index.html
+  app.get('*', (req, res) => {
+    res.sendFile(join(frontendDist, 'index.html'));
+  });
+  console.log(`Serving frontend from ${frontendDist}`);
+} else {
+  console.log('No frontend/dist found — API-only mode');
+}
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Graph Platform v2.4 http://localhost:${PORT}`);

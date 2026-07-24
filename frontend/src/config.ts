@@ -5,7 +5,8 @@ export type GpConfig = {
 }
 
 const defaults: GpConfig = {
-  API_URL: 'http://46.253.132.225:3001',
+  // Пустая строка = относительные пути /api/... — работает и на Render, и локально через Vite proxy
+  API_URL: '',
   OFFLINE_AI_URL: 'http://127.0.0.1:5005',
   APP_TITLE: 'Graph Platform'
 }
