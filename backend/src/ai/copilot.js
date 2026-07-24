@@ -12,7 +12,7 @@ const KB = {
   'workspace': 'Workspace → Portfolio → Project → Graph. Multi-tenant масштаб.'
 };
 
-export function answerLocal({ message, context, store, ragHits = [] }) {
+export async function answerLocal({ message, context, store, ragHits = [] }) {
   const m = (message || '').toLowerCase();
   if (/привет|здравствуй|hello|^hi$/.test(m)) {
     return { answer: 'Привет! Я Graph Copilot. Могу объяснить граф знаний, слои, Actor, Interest Scope, Control Knowledge, Pipe и архитектуру.', model: 'local-v2', sources: ['greet'] };
@@ -25,7 +25,7 @@ export function answerLocal({ message, context, store, ragHits = [] }) {
   for (const [k, v] of Object.entries(KB)) {
     if (m.includes(k)) { parts.push(v); sources.push(k); }
   }
-  const nodes = store.getNodes();
+  const nodes = await store.getNodes();
   nodes.filter(n => m.includes((n.label || '').toLowerCase()) || m.includes(n.id)).forEach(n => {
     parts.push(`Узел «${n.label}» [${n.layer}/${n.tab || '-'}]: ${n.description || n.kind}`);
     sources.push(n.id);

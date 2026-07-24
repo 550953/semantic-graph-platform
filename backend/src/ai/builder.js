@@ -1,7 +1,7 @@
-export function buildContext({ store, actorId, selectedNodeIds = [], role }) {
+export async function buildContext({ store, actorId, selectedNodeIds = [], role }) {
   let nodeIds = new Set(selectedNodeIds || []);
   if (actorId) {
-    const scope = store.computeInterestScope(actorId);
+    const scope = await store.computeInterestScope(actorId);
     scope.nodeIds.forEach(id => nodeIds.add(id));
   }
   const ROLE_SEEDS = {
@@ -11,17 +11,25 @@ export function buildContext({ store, actorId, selectedNodeIds = [], role }) {
   };
   if (role && ROLE_SEEDS[role]) ROLE_SEEDS[role].forEach(id => nodeIds.add(id));
   nodeIds.add('core');
+
   const expanded = new Set(nodeIds);
-  [...nodeIds].forEach(id => store.getNeighbors(id).forEach(n => expanded.add(n)));
-  const subgraph = store.getSubgraph([...expanded]);
-  const workItems = store.getWorkItems().filter(w => w.relatedNodeIds?.some(id => expanded.has(id)));
-  const reviews = store.getReviews().filter(r => expanded.has(r.scope?.artifactId));
+  for (const id of [...nodeIds]) {
+    const neighbors = await store.getNeighbors(id);
+    neighbors.forEach(n => expanded.add(n));
+  }
+
+  const [subgraph, workItems, reviews] = await Promise.all([
+    store.getSubgraph([...expanded]),
+    store.getWorkItems(),
+    store.getReviews()
+  ]);
+
   return {
     nodeIds: [...expanded],
     nodes: subgraph.nodes,
     edges: subgraph.edges,
-    workItems,
-    reviews,
+    workItems: workItems.filter(w => w.relatedNodeIds?.some(id => expanded.has(id))),
+    reviews: reviews.filter(r => expanded.has(r.scope?.artifactId)),
     actorId: actorId || null,
     role: role || null
   };

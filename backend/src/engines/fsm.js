@@ -1,4 +1,4 @@
-import { getDb, jparse } from '../utils/helper.js';
+import { queryOne, jparse } from '../utils/helper.js';
 
 const DEFAULT_MACHINES = {
   Task: {
@@ -84,10 +84,9 @@ const DEFAULT_MACHINES = {
 
 const machinesCache = new Map();
 
-function loadMachinesFromOntology(workspaceId) {
+async function loadMachinesFromOntology(workspaceId) {
   try {
-    const db = getDb();
-    const row = db.prepare('SELECT profile_json FROM ontology WHERE workspace_id = ?').get(workspaceId);
+    const row = await queryOne('SELECT profile_json FROM ontology WHERE workspace_id = ?', [workspaceId]);
     
     if (!row || !row.profile_json) {
       return { ...DEFAULT_MACHINES };
@@ -109,17 +108,12 @@ function loadMachinesFromOntology(workspaceId) {
   }
 }
 
-export function getMachine(type, workspaceId = 'ws-default') {
+export async function getMachine(type, workspaceId = 'ws-default') {
   try {
     const cacheKey = `${workspaceId}:${type}`;
-    
-    if (machinesCache.has(cacheKey)) {
-      return machinesCache.get(cacheKey);
-    }
-    
-    const machines = loadMachinesFromOntology(workspaceId);
+    if (machinesCache.has(cacheKey)) return machinesCache.get(cacheKey);
+    const machines = await loadMachinesFromOntology(workspaceId);
     const machine = machines[type] || machines['Task'] || DEFAULT_MACHINES['Task'];
-    
     machinesCache.set(cacheKey, machine);
     return machine;
   } catch (error) {
@@ -144,9 +138,9 @@ export function clearMachinesCache(workspaceId = null) {
   }
 }
 
-export function getAllowedTransitions(type, currentStatus, workspaceId = 'ws-default') {
+export async function getAllowedTransitions(type, currentStatus, workspaceId = 'ws-default') {
   try {
-    const m = getMachine(type, workspaceId);
+    const m = await getMachine(type, workspaceId);
     const state = m.states[currentStatus] || m.states[m.initial];
     return Object.keys(state.on || {});
   } catch (error) {
@@ -154,38 +148,22 @@ export function getAllowedTransitions(type, currentStatus, workspaceId = 'ws-def
   }
 }
 
-export function transition(type, currentStatus, event, workspaceId = 'ws-default') {
+export async function transition(type, currentStatus, event, workspaceId = 'ws-default') {
   try {
-    const m = getMachine(type, workspaceId);
+    const m = await getMachine(type, workspaceId);
     const state = m.states[currentStatus];
-    
-    if (!state) {
-      return {
-        ok: false,
-        error: `Unknown status: ${currentStatus}`,
-        allowed: []
-      };
-    }
-    
+    if (!state) return { ok: false, error: `Unknown status: ${currentStatus}`, allowed: [] };
     const next = state.on?.[event];
-    
-    if (!next) {
-      return {
-        ok: false,
-        error: `Event ${event} not allowed from ${currentStatus}`,
-        allowed: Object.keys(state.on || {})
-      };
-    }
-    
+    if (!next) return { ok: false, error: `Event ${event} not allowed from ${currentStatus}`, allowed: Object.keys(state.on || {}) };
     return { ok: true, from: currentStatus, to: next, event };
   } catch (error) {
     return { ok: false, error: error.message, allowed: [] };
   }
 }
 
-export function listMachines(workspaceId = 'ws-default') {
+export async function listMachines(workspaceId = 'ws-default') {
   try {
-    const machines = loadMachinesFromOntology(workspaceId);
+    const machines = await loadMachinesFromOntology(workspaceId);
     
     return Object.entries(machines).map(([type, m]) => ({
       type,
