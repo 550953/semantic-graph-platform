@@ -1,0 +1,14 @@
+{
+  "name": "semantic-graph-platform",
+  "version": "2.4.0",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install --omit=dev",
+    "start": "node backend/src/index.js",
+    "dev:backend": "cd backend && node --watch src/index.js",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
