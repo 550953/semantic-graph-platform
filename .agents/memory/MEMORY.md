@@ -1,0 +1,1 @@
+- [Project setup](project-setup.md) — semantic-graph-platform: Render service, Supabase pooler, custom domain, git via SSH (on demand only)
