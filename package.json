@@ -3,7 +3,7 @@
   "version": "2.4.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install --omit=dev",
+    "build": "cd frontend && NODE_ENV=development npm install && npm run build && cd ../backend && npm_config_python=python3 npm install",
     "start": "node backend/src/index.js",
     "dev:backend": "cd backend && node --watch src/index.js",
     "dev:frontend": "cd frontend && npm run dev"
